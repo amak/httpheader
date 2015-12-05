@@ -100,6 +100,8 @@ CRLF = '\r\n'
 DIGIT = '0123456789'
 HEX = '0123456789ABCDEFabcdef'
 
+import sys
+
 # Try to get a set/frozenset implementation if possible
 try:
     type(frozenset)
@@ -126,7 +128,7 @@ except NameError:
 
 def _is_string( obj ):
     """Returns True if the object is a string or unicode type."""
-    return isinstance(obj,str) or isinstance(obj,unicode)
+    return isinstance(obj, str) or isinstance(obj, unicode) if sys.version_info.major == 2 else isinstance(obj, str)
 
 
 def http_datetime( dt=None ):
@@ -496,10 +498,10 @@ def _test_comments():
     def _testrm( a, b, collapse ):
         b2 = remove_comments( a, collapse )
         if b != b2:
-            print 'Comment test failed:'
-            print '   remove_comments( %s, collapse_spaces=%s ) -> %s' \
-                  % (repr(a), repr(collapse), repr(b2))
-            print '   expected %s' % repr(b)
+            print('Comment test failed:')
+            print('   remove_comments( %s, collapse_spaces=%s ) -> %s' \
+                  % (repr(a), repr(collapse), repr(b2)))
+            print('   expected %s' % repr(b))
             return 1
         return 0
     failures = 0
@@ -1333,6 +1335,9 @@ class content_type(object):
     minor = property(_get_minor,_set_minor,doc="Minor media sub-classification")
 
     def __nonzero__(self):
+        return self.__bool__()
+
+    def __bool__(self):
         return True
 
     def __str__(self):
@@ -1340,13 +1345,13 @@ class content_type(object):
         s = '%s/%s' % (self.major, self.minor)
         if self.parmdict:
             extra = '; '.join([ '%s=%s' % (a[0],quote_string(a[1],False)) \
-                                for a in self.parmdict.items()])
+                                for a in list(self.parmdict.items())])
             s += '; ' + extra
         return s
 
     def __unicode__(self):
         """Unicode string value."""
-        return unicode(self.__str__())
+        return str(self.__str__())
 
     def __repr__(self):
         """Python representation of this object."""
@@ -1509,7 +1514,7 @@ def acceptable_content_type( accept_header, content_types, ignore_wildcard=True 
                 elif client_ct.minor == server_ct.minor: # something/something is a 3
                     matchlen = 3
                     # must make sure all the parms match too
-                    for pname, pval in client_ct.parmdict.items():
+                    for pname, pval in list(client_ct.parmdict.items()):
                         sval = server_ct.parmdict.get(pname)
                         if pname == 'charset':
                             # special case for charset to match aliases
@@ -1764,7 +1769,7 @@ class language_tag(object):
 
     def __unicode__(self):
         """The unicode string form of this language tag."""
-        return unicode(self.__str__())
+        return str(self.__str__())
 
     def __repr__(self):
         """The python representation of this language tag."""
